@@ -16,18 +16,34 @@ class LoginForm extends Component {
     };
 
     this.onButtonPress = this.onButtonPress.bind(this);
+    this.onLoginSuccess = this.onLoginSuccess.bind(this);
+    this.onLoginFail = this.onLoginFail.bind(this);
   }
 
   onButtonPress() {
     this.setState({ error: '', loading: true });
     const { email, password } = this.state;
     firebase.auth().signInWithEmailAndPassword(email, password)
+      .then(this.onLoginSuccess)
       .catch(() => {
         firebase.auth().createUserWithEmailAndPassword(email, password)
-          .catch(() => {
-            this.setState({ signinError: 'Authentication failed' });
-          });
+          .then(this.onLoginSuccess)  // handles success after successful registration
+          .catch(this.onLoginFail);
       });
+  }
+
+  onLoginFail() {
+    this.setState({ error: 'Authentication failed', loading: false });
+  }
+
+  onLoginSuccess() {
+    // will handle the case for successful Login
+    this.setState({
+      email: '',
+      password: '',
+      loading: false,
+      error: ''
+    });
   }
 
   renderButton() {
@@ -61,7 +77,7 @@ class LoginForm extends Component {
           />
         </CardSection>
         <CardSection>
-          <Text style={errorTextStyle}>{this.state.signinError}</Text>
+          <Text style={errorTextStyle}>{this.state.error}</Text>
         </CardSection>
         <CardSection>
           {this.renderButton()}
@@ -70,6 +86,17 @@ class LoginForm extends Component {
     );
   }
 }
+
+const styles = {
+  errorTextStyle: {
+    fontSize: 20,
+    alignSelf: 'center',
+    color: 'red'
+  }
+};
+
+export default LoginForm;
+
 /*
 To change set state of both fields using one helper method set up customInput like so
 <CustomInput
@@ -91,13 +118,3 @@ onTextChange(keyId, text) {
 
 this can then be paired with a setState to each needed piece of state
 */
-
-const styles = {
-  errorTextStyle: {
-    fontSize: 20,
-    alignSelf: 'center',
-    color: 'red'
-  }
-};
-
-export default LoginForm;
